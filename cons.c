@@ -36,6 +36,7 @@ int main(int argc, char*argv[]){
         printf("error: no argument\n");
         return -1;
     }
+    lambda = atof(argv[1]);
     empty = sem_open("prod_cons_empty", O_CREAT);
     full = sem_open("prod_cons_full", O_CREAT);
     mutex = sem_open("prod_cons_mutex", O_CREAT);
@@ -43,14 +44,12 @@ int main(int argc, char*argv[]){
     int shmid;
 
     shmid = shmget((key_t)SHMKEY, sizeof(struct buf_area), IPC_CREAT|666);
-    printf("%d?\n", shmid);
     if(shmid<0){
         perror("shmget error!");
         exit(1);
     }
 
     buf_ptr = (struct buf_area *)shmat(shmid, NULL, 0);   //获取共享内存
-    printf("%d!!!!!\n", buf_ptr->buffer[0]);
 
     pthread_t tidp[THNUM];
     for(int k = 0; k < THNUM; k++) pthread_create(&tidp[k],NULL,consume,(void*)&k);
@@ -68,7 +67,8 @@ int main(int argc, char*argv[]){
 void* consume(void* argv){
     int id = *((int*)argv);
     while(1){
-        usleep(1000000*NEGEXP_time(lambda));
+    	double x = NEGEXP_time(lambda);
+        usleep(1000000*x);
         sem_wait(full);
         sem_wait(mutex);
         int data = buf_ptr->buffer[buf_ptr->head];
@@ -84,5 +84,5 @@ void* consume(void* argv){
 double NEGEXP_time(double lambda){
     double x = 0;
     while(x == 0 || x == 1) x = (double)rand() / RAND_MAX;
-    return -1/lambda*log(x);
+    return -1/lambda*log(1-x);
 }

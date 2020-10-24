@@ -56,7 +56,6 @@ int main(int argc, char*argv[]){
     if (shmid != -1) shmctl(shmid, IPC_RMID, 0);
 
     shmid = shmget((key_t)SHMKEY, sizeof(struct buf_area), IPC_CREAT|0777);
-    printf("%d?\n", shmid);
     if(shmid<0){
         perror("shmget error!");
         exit(1);
@@ -82,7 +81,8 @@ void* produce(void *argv){
     int id = *(int*)argv;
 
     while(1){
-        usleep(1000000*NEGEXP_time(lambda));
+    	double x = NEGEXP_time(lambda);
+        usleep(1000000*x);
         int data = rand()%100;       //生成100内随机数
         sem_wait(empty);
         sem_wait(mutex);
@@ -99,5 +99,5 @@ void* produce(void *argv){
 double NEGEXP_time(double lambda){
     double x = 0;
     while(x == 0 || x == 1) x = (double)rand() / RAND_MAX;
-    return -1/lambda*log(x);
+    return -1/lambda*log(1-x);
 }
